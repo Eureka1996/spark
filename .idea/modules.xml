@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/sparkstreaming/advertise/advertise.iml" filepath="$PROJECT_DIR$/sparkstreaming/advertise/advertise.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sparkstreaming/imoocsparkstreaming/imoocsparkstreaming.iml" filepath="$PROJECT_DIR$/sparkstreaming/imoocsparkstreaming/imoocsparkstreaming.iml" />
       <module fileurl="file://$PROJECT_DIR$/sparkstreaming/kafka/kafka.iml" filepath="$PROJECT_DIR$/sparkstreaming/kafka/kafka.iml" />
       <module fileurl="file://$PROJECT_DIR$/spark2.iml" filepath="$PROJECT_DIR$/spark2.iml" />
       <module fileurl="file://$PROJECT_DIR$/sparkcore/sparkcore.iml" filepath="$PROJECT_DIR$/sparkcore/sparkcore.iml" />

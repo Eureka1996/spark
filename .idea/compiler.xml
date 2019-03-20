@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="advertise" />
+        <module name="imoocsparkstreaming" />
         <module name="kafka" />
         <module name="sparksqlhelloworld" />
         <module name="sparkwordcount" />
@@ -15,6 +16,7 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="advertise" target="1.8" />
+      <module name="imoocsparkstreaming" target="1.8" />
       <module name="kafka" target="1.8" />
       <module name="spark2" target="1.8" />
       <module name="sparkcore" target="1.8" />
