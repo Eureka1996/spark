@@ -1,12 +1,15 @@
 package com.wufuqiang.spark.project.spark
 
-import com.wufuqiang.spark.project.domain.ClickLog
+import com.wufuqiang.spark.project.dao.{CourseClickCountDAO, CourseSearchClickCountDAO}
+import com.wufuqiang.spark.project.domain.{ClickLog, CourseClickCount, CourseSearchClickCount}
 import com.wufuqiang.spark.project.utils.DateUtils
 import kafka.serializer.StringDecoder
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.kafka.KafkaUtils
 import org.apache.spark.streaming.{Seconds, StreamingContext}
+
+import scala.collection.mutable.ListBuffer
 
 /**
   * @ author wufuqiang
@@ -39,7 +42,8 @@ object ImoocStatStreamingApp {
     val stream = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaPro, Set(topics))
 
     val logs = stream.map(_._2)
-    //65.23.134.142   2019-03-21 10:20:01     "GET /class/163.html HTTP/1.1"  500     http://cn.bing.com/search?q=Spark Streaming
+    //原始日志格式  65.23.134.142   2019-03-21 10:20:01     "GET /class/163.html HTTP/1.1"  500     http://cn.bing.com/search?q=Spark Streaming
+
     val cleanData = logs.map(line => {
       val infos = line.split("\t")
       val url = infos(2).split(" ")(1)
@@ -51,7 +55,37 @@ object ImoocStatStreamingApp {
       ClickLog(infos(0),DateUtils.parseToMinute(infos(1)),courseId,infos(3).toInt,infos(4))
     }).filter(_.courseId != 0)
 
-    cleanData.print()
+//    cleanData.print()
+    cleanData.map(x => {
+      (x.time.substring(0,8) + "_" + x.courseId,1)
+    }).reduceByKey(_+_).foreachRDD(rdd=>{
+      rdd.foreachPartition(partitionRecords =>{
+        val list = new ListBuffer[CourseClickCount]
+        partitionRecords.foreach(pair=>{
+          list.append(CourseClickCount(pair._1,pair._2))
+        })
+        CourseClickCountDAO.save(list)
+      })
+    })
+
+    cleanData.map(x=>{
+      val search_name = x.referer.replaceAll("//","/").split("/")
+      var host = ""
+      if(search_name.size >= 2 )
+        host = search_name(1)
+      (x.time,host,x.courseId)
+    }).filter(_._2 != "").map(x=>{
+
+      (x._1.substring(0,8) +"_"+x._2+"_"+x._3,1)
+    }).reduceByKey(_+_).foreachRDD(rdd=>{
+      rdd.foreachPartition(partitionRecords =>{
+        val list = new ListBuffer[CourseSearchClickCount]
+        partitionRecords.foreach(pair=>{
+          list.append(CourseSearchClickCount(pair._1,pair._2))
+        })
+        CourseSearchClickCountDAO.save(list)
+      })
+    })
 
     ssc.start()
     ssc.awaitTermination()

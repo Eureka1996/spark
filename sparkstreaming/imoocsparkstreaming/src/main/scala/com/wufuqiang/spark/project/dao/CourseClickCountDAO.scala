@@ -59,7 +59,11 @@ object CourseClickCountDAO {
     list.append(CourseClickCount("20171111_8",8L))
     list.append(CourseClickCount("20171111_9",18L))
     list.append(CourseClickCount("20171111_1",1800L))
-    save(list)
-    println(count("20171111_1"))
+//    save(list)
+    while(true){
+
+      println(count("20190321_145"))
+      Thread.sleep(10*60*1000)
+    }
   }
 }
