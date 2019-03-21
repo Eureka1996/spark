@@ -2,7 +2,6 @@ package com.wufuqiang.spark.project.dao
 
 import com.wufuqiang.spark.project.domain.CourseClickCount
 import com.wufuqiang.spark.project.hbase.HBaseUtil
-import org.apache.hadoop.hbase.{Cell, CellUtil}
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.util.Bytes
 
