@@ -1,5 +1,7 @@
 package com.wufuqiang.spark.project.spark
 
+import com.wufuqiang.spark.project.domain.ClickLog
+import com.wufuqiang.spark.project.utils.DateUtils
 import kafka.serializer.StringDecoder
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.spark.SparkConf
@@ -36,10 +38,20 @@ object ImoocStatStreamingApp {
     // 链接到了kafka
     val stream = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaPro, Set(topics))
 
+    val logs = stream.map(_._2)
+    //65.23.134.142   2019-03-21 10:20:01     "GET /class/163.html HTTP/1.1"  500     http://cn.bing.com/search?q=Spark Streaming
+    val cleanData = logs.map(line => {
+      val infos = line.split("\t")
+      val url = infos(2).split(" ")(1)
+      var courseId = 0 ;
+      if(url.startsWith("/class")){
+        val courseIdHTML = url.split("/")(2)
+        courseId = courseIdHTML.substring(0,courseIdHTML.lastIndexOf(".")).toInt
+      }
+      ClickLog(infos(0),DateUtils.parseToMinute(infos(1)),courseId,infos(3).toInt,infos(4))
+    }).filter(_.courseId != 0)
 
-
-//    val messages = KafkaUtils.createStream(ssc,zkQuorum,groupId,topics) ;
-    stream.map(_._2).count().print
+    cleanData.print()
 
     ssc.start()
     ssc.awaitTermination()
