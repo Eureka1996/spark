@@ -51,7 +51,7 @@
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
             <version>${scala.version}</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
 
 
@@ -65,7 +65,7 @@
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-core_2.11</artifactId>
                 <version>${spark.version}</version>
-                <scope>compile</scope>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>

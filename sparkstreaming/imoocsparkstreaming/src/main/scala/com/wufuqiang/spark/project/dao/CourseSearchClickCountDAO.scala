@@ -1,6 +1,6 @@
 package com.wufuqiang.spark.project.dao
 
-import com.wufuqiang.spark.project.domain.{CourseClickCount, CourseSearchClickCount}
+import com.wufuqiang.spark.project.domain.CourseSearchClickCount
 import com.wufuqiang.spark.project.hbase.HBaseUtil
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.util.Bytes
