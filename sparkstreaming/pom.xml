@@ -13,7 +13,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>wordcount</module>
-        <module>kafka</module>
         <module>advertise</module>
         <module>imoocsparkstreaming</module>
     </modules>
