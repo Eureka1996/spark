@@ -16,9 +16,25 @@ import java.util.List;
  **/
 public class HBaseUtil {
     public static Configuration conf ;
-
+    private static Connection connection ;
     static{
         conf = HBaseConfiguration.create() ;
+        try{
+
+            connection =ConnectionFactory.createConnection(conf) ;
+        }catch (Exception e){
+            System.out.println("连接HBase失败") ;
+        }
+    }
+
+    private HBaseUtil(){
+        if(connection == null){
+            try {
+                connection = ConnectionFactory.createConnection(conf) ;
+            } catch (IOException e) {
+                System.out.println("连接HBase失败");
+            }
+        }
     }
 
 
@@ -26,7 +42,6 @@ public class HBaseUtil {
 //        老API
 //        HBaseAdmin admin = new HBaseAdmin(conf) ;
 
-        Connection connection = ConnectionFactory.createConnection(conf) ;
         Admin admin = connection.getAdmin() ;
         return admin.tableExists(TableName.valueOf(tableName)) ;
     }
@@ -48,7 +63,6 @@ public class HBaseUtil {
 
         }
         admin.close();
-        connection.close();
     }
 
     //    表的删除
@@ -64,63 +78,51 @@ public class HBaseUtil {
             System.out.println("要删除的表不存在。") ;
         }
         admin.close() ;
-        connection.close() ;
 
     }
 
     //    添加一行数据
     public static void addRow(String tableName , String rowKey , String cf , String column , String value)throws IOException{
-        Connection connection = ConnectionFactory.createConnection(conf) ;
         Table table = connection.getTable(TableName.valueOf(tableName))  ;
         Put put = new Put(Bytes.toBytes(rowKey)) ;
         put.addColumn(Bytes.toBytes(cf),Bytes.toBytes(column),Bytes.toBytes(value)) ;
         table.put(put) ;
         System.out.println("添加数据成功。");
         table.close() ;
-        connection.close() ;
     }
 
     public static void incrementColumnValue(String tableName , String rowKey,String cf , String column,Long value)throws IOException{
-        Connection connection = ConnectionFactory.createConnection(conf) ;
         Table table = connection.getTable(TableName.valueOf(tableName)) ;
         table.incrementColumnValue(Bytes.toBytes(rowKey),Bytes.toBytes(cf),Bytes.toBytes(column),value) ;
-//        table.close();
-//        connection.close();
+        table.close();
         System.out.println("数据累加成功") ;
     }
 
     public static void addRow(String tableName ,List<Put> puts)throws IOException{
-        Connection connection = ConnectionFactory.createConnection(conf) ;
         Table table = connection.getTable(TableName.valueOf(tableName)) ;
         table.put(puts) ;
         table.close() ;
-        connection.close();
 
     }
 
     //    删除一行数据
     public static void deleteRow(String tableName, String rowKey,String cf , String column)throws IOException{
-        Connection connection = ConnectionFactory.createConnection(conf) ;
         Table table = connection.getTable(TableName.valueOf(tableName) )  ;
         Delete delete = new Delete(Bytes.toBytes(rowKey)) ;
         delete.addColumn(Bytes.toBytes(cf),Bytes.toBytes(column)) ;
         table.delete(delete);
         table.close() ;
-        connection.close() ;
         System.out.println("删除数据成功.") ;
 
     }
 
     public static void deleteRows(String tableName , List<Delete> deletes)throws IOException{
-        Connection connection = ConnectionFactory.createConnection(conf)  ;
         Table table = connection.getTable(TableName.valueOf(tableName) ) ;
         table.delete(deletes) ;
         table.close() ;
-        connection.close() ;
     }
 
     public static void getAllRows(String tableName)throws IOException{
-        Connection connection = ConnectionFactory.createConnection(conf) ;
         Table table = connection.getTable(TableName.valueOf(tableName)) ;
         Scan scan = new Scan() ;
         ResultScanner resultScanner = table.getScanner(scan) ;
@@ -137,11 +139,9 @@ public class HBaseUtil {
 
         }
         table.close() ;
-        connection.close() ;
     }
 
     public static List<Result> getRows(String tableName , RowFilter filter) throws IOException {
-        Connection connection = ConnectionFactory.createConnection(conf) ;
         Table table = connection.getTable(TableName.valueOf(tableName)) ;
         Scan scan = new Scan() ;
         scan.setFilter(filter) ;
@@ -153,22 +153,18 @@ public class HBaseUtil {
             results.add(result) ;
         }
         table.close() ;
-        connection.close() ;
         return results ;
     }
 
     public static Result[] getRows(String tableName,List<Get> gets)throws IOException{
-        Connection connection = ConnectionFactory.createConnection(conf) ;
         Table table = connection.getTable(TableName.valueOf(tableName)) ;
         Result[] results = table.get(gets) ;
         table.close() ;
-        connection.close() ;
         return results ;
 
     }
 
     public static Result getARowByRowKey(String tableName,String rowKey,String cf)throws IOException{
-        Connection connection = ConnectionFactory.createConnection(conf) ;
         Table table = connection.getTable(TableName.valueOf(tableName)) ;
 
         Get get = new Get(Bytes.toBytes(rowKey)) ;
@@ -176,12 +172,10 @@ public class HBaseUtil {
         get.addFamily(Bytes.toBytes(cf)) ;
         Result result = table.get(get) ;
         table.close() ;
-        connection.close();
         return result ;
     }
 
     private static void initNameSpace() throws IOException {
-        Connection connection = ConnectionFactory.createConnection(conf) ;
         Admin admin = connection.getAdmin() ;
         NamespaceDescriptor ns_weibo = NamespaceDescriptor
                 .create("ns_wufuqiang")
@@ -191,6 +185,11 @@ public class HBaseUtil {
 
         admin.createNamespace(ns_weibo);
         admin.close() ;
-        connection.close() ;
+    }
+
+    public static void close() throws IOException{
+        if(connection != null){
+            connection.close() ;
+        }
     }
 }

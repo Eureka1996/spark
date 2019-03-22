@@ -61,7 +61,7 @@ object CourseClickCountDAO {
 //    save(list)
     while(true){
 
-      println(count("20190321_145"))
+      println(count("20190322_774"))
       Thread.sleep(10*60*1000)
     }
   }
