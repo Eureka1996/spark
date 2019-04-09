@@ -15,6 +15,7 @@
         <module>wordcount</module>
         <module>advertise</module>
         <module>imoocsparkstreaming</module>
+        <module>streamingkafka</module>
     </modules>
 
     <dependencies>

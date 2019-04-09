@@ -21,6 +21,8 @@ class CustomReceiver(host:String,port:Int) extends Receiver[String](StorageLevel
     var inputText = ""
     val reader = new BufferedReader(new InputStreamReader(socket.getInputStream(),StandardCharsets.UTF_8))
     inputText = reader.readLine()
+
+
     while(!isStopped() &&  inputText != null){
 //      如果接收到了数据就保存
       store(inputText)

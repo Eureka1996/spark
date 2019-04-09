@@ -1,6 +1,5 @@
 package com.wufuqiang.advertise
 
-
 import kafka.api.{OffsetRequest, PartitionOffsetRequestInfo, TopicMetadataRequest}
 import kafka.common.TopicAndPartition
 import kafka.consumer.SimpleConsumer

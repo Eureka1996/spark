@@ -23,7 +23,7 @@ object ImoocStatStreamingApp {
 
     val ssc = new StreamingContext(sparkConf,Seconds(60))
 
-    val zkQuorum = "10-255-0-139:2181,10-255-0-197:2181,10-255-0-253:2181"
+    val zkQuorum = "10-255-0-197:2181,10-255-0-197:2181,10-255-0-253:2181"
     val topics = "streamingtopic"
 
 

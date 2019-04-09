@@ -1,6 +1,5 @@
 package com.wufuqiang.kafka
 
-
 import kafka.serializer.StringDecoder
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -18,24 +17,18 @@ object Streaming2Kafka {
     val sparkConf = new SparkConf().setAppName("kafka").setMaster("local[*]")
     val ssc = new StreamingContext(sparkConf,Seconds(5))
 
-    val fromTopic = "from1"
-    val toTopic = "to1"
-    val brokers = "node1:9092,node2:9092,node3:9092"
+    val fromTopic = "test1"
+    val toTopic = "test2"
+    val brokers = "10-255-0-242:9092,10-255-0-139:9092,10-255-0-197:9092"
 
-//    val kafkaPro = Map[String,String](
-//      "bootstrap.servers" -> "10.130.140.81:9092,10.130.141.68:9092,10.130.140.82:9092" ,
-//      ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG -> "10.130.140.81:9092,10.130.141.68:9092,10.130.140.82:9092",
-//      ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG -> "org.apache.kafka.common.serialization.StringDeserializer",
-//      ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG -> "org.apache.kafka.common.serialization.StringDeserializer",
-//      ConsumerConfig.GROUP_ID_CONFIG -> "kafka" ,
-//      ConsumerConfig.AUTO_OFFSET_RESET_CONFIG -> "largest"
-//
-//    )
+
     val kafkaPro = Map[String,String](
-      ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG -> "node1:9092,node2:9092,node3:9092" ,
+      "bootstrap.servers" -> "10-255-0-242:9092,10-255-0-139:9092,10-255-0-197:9092",//用于初始化链接到集群的地址
       ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG -> "org.apache.kafka.common.serialization.StringDeserializer",
       ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG -> "org.apache.kafka.common.serialization.StringDeserializer",
-      ConsumerConfig.GROUP_ID_CONFIG -> "kafka" ,
+      //用于标识这个消费者属于哪个消费团体
+      ConsumerConfig.GROUP_ID_CONFIG -> "wufuqiang" ,
+      //如果没有初始化偏移量或者当前的偏移量不存在任何服务器上，可以使用这个配置属性
       ConsumerConfig.AUTO_OFFSET_RESET_CONFIG -> "largest"
     )
 
@@ -51,7 +44,6 @@ object Streaming2Kafka {
         kafkaProxyPool.returnObject(kafkaProxy)
       }
     )
-
 
     ssc.start()
     ssc.awaitTermination()

@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kafka</artifactId>
+    <artifactId>streamingkafka</artifactId>
 
     <dependencies>
         <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-streaming-kafka -->
@@ -34,6 +34,5 @@
 
 
     </dependencies>
-
 
 </project>
