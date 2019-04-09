@@ -30,6 +30,8 @@ object MockRealTimeData {
     array.toArray
   }
 
+
+//  创建Kafka的生产者
   def createKafkaProducer(broker:String,topic:String):KafkaProducer[String,String] ={
 
     val prop = new Properties()
@@ -42,12 +44,12 @@ object MockRealTimeData {
 
   def main(args: Array[String]): Unit = {
 
-//    val brokers = "10-255-0-242:9092,10-255-0-139:9092,10-255-0-197:9092"
-    val brokers = "10.251.254.56:9092"
-//    val topic = "advertise"
-    val topic = "test"
+    val brokers = "10-255-0-242:9092,10-255-0-139:9092,10-255-0-197:9092"
+//    val brokers = "10.251.254.56:9092"
+    val topic = "advertise"
+//    val topic = "test"
     val kafkaProducer = createKafkaProducer(brokers,topic)
-    println(topic)
+//    println(topic)
     while(true){
       for(item <- generateMockData()){
 

@@ -6,13 +6,13 @@ import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig}
 import org.apache.kafka.common.serialization.StringSerializer
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable
+
 /**
   * @ author wufuqiang
   * @ date 2019/2/18/018 - 14:55
   **/
 
-//代理类
+//代理类，包装Kafka客户端
 class KafkaProxy(broker:String){
 
   val prop = Map[String,Object](
@@ -27,10 +27,12 @@ class KafkaProxy(broker:String){
 }
 
 
-//代理类的工厂类
+//创建一个创建KafkaProxy的工厂 commons-pool2
 class KafkaProxyFactory(broker:String) extends BasePooledObjectFactory[KafkaProxy]{
+//  创建实例
   override def create(): KafkaProxy = new KafkaProxy(broker)
 
+//  包装实例
   override def wrap(t: KafkaProxy): PooledObject[KafkaProxy] = new DefaultPooledObject[KafkaProxy](t)
 }
 
