@@ -28,19 +28,24 @@ object AdvertiseAnysis {
 
 //    kafka中的主题
     val topic = "advertise"
-//    val topicDirs = new ZKGroupTopicDirs("advertise-analyse",topic)
-//    val zkTopicPath = s"${topicDirs.consumerOffsetDir}"
-//
-//
-////    创建了一个zookeeper对象
-//    val zookeeper = "node2:2181,node3:2181,node4:2181"
-//    val zkCLient = new ZkClient(zookeeper)
-//
-//    val children = zkCLient.countChildren(zkTopicPath)
-//
-//    var adRealtimeLogDStream :InputDStream[(String,String)] = null
+
+    val topicDirs = new ZKGroupTopicDirs("advertise-analyse",topic)
+    val zkTopicPath = s"${topicDirs.consumerOffsetDir}"
 
 
+//    创建了一个zookeeper对象
+    val zookeeper =  "10-255-0-192:2181,10-255-0-197:2181,10-255-0-253:2181"
+    val zkCLient = new ZkClient(zookeeper)
+    //zookeeper中是否保存了相关信息
+    val children = zkCLient.countChildren(zkTopicPath)
+
+
+
+
+    var adRealtimeLogDStream :InputDStream[(String,String)] = null
+
+
+    //Kafka配置信息
     val kafkaParams = Map[String,String](
       ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG -> "10-255-0-242:9092,10-255-0-139:9092,10-255-0-197:9092" ,
       ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG -> "org.apache.kafka.common.serialization.StringDeserializer" ,
@@ -50,91 +55,94 @@ object AdvertiseAnysis {
     )
 
 
-//    if(children >0){
-//      println("从zookeeper中恢复")
-//
-//      var fromOffsets:Map[TopicAndPartition,Long] = Map()
+    if(children > 0){
+      println("从zookeeper中恢复")
+
+      var fromOffsets:Map[TopicAndPartition,Long] = Map()
 
 //      为了获得一个topic所有的partition的主分区Hostname
-//      val topicList = List(topic)
-//
-//      val request = new TopicMetadataRequest(topicList,0)
-//      val getLeaderConsumer = new SimpleConsumer("node1",9092,10000,10000,"offsetLookup")
-//
-//      val response = getLeaderConsumer.send(request)
-//
-//      val topicMetadataOption = response.topicsMetadata.headOption
-//
-//      val partitions = topicMetadataOption match{
-//        case Some(tm ) =>
-//          tm.partitionsMetadata.map(pm => (pm.partitionId,pm.leader.get.host)).toMap
-//        case None => Map[Int,String]()
-//      }
-//      getLeaderConsumer.close()
-//
-//      println("partitions info is:" + partitions)
-//      println("children info is:" + children)
+      val topicList = List(topic)
 
-//      for(i <- 0 until children){
-//        val partitionOffset = zkCLient.readData[String](s"${topicDirs.consumerOffsetDir}/${i}")
-//        println("保存的偏移位置是："+partitionOffset)
-//        val tp = TopicAndPartition(topic,i)
-//        val requestMin = OffsetRequest(Map(tp -> PartitionOffsetRequestInfo(OffsetRequest.EarliestTime,1)))
-//        val consumerMin = new SimpleConsumer(partitions(i),9092,10000,10000,"getMinOffset")
-//        val curOffset = consumerMin.getOffsetsBefore(requestMin).partitionErrorAndOffsets(tp).offsets
-//        consumerMin.close()
-//        var nextOffset = partitionOffset.toLong
-//
-//        if(curOffset.length > 0 && nextOffset < curOffset.head){
-//          nextOffset = curOffset.head
-//        }
-//        println("修正后的偏移位置是："+nextOffset)
-//        fromOffsets += (tp -> nextOffset)
-//
-//
-//      }
-//      val messageHandler = (mmd:MessageAndMetadata[String,String]) => (mmd.topic,mmd.message())
-//
-//      adRealtimeLogDStream = KafkaUtils.createDirectStream[String,String,StringDecoder,StringDecoder,(String,String)](ssc,kafkaParams,fromOffsets,messageHandler)
-//    }else{
-//      println("直接创建")
+      val request = new TopicMetadataRequest(topicList,0)
+      val getLeaderConsumer = new SimpleConsumer("10-255-0-242",9092,10000,10000,"OffsetLookup")
+
+      val response = getLeaderConsumer.send(request)
+
+      val topicMetadataOption = response.topicsMetadata.headOption
+
+      val partitions = topicMetadataOption match{
+        case Some(tm ) =>
+          tm.partitionsMetadata.map(pm => (pm.partitionId,pm.leader.get.host)).toMap
+        case None => Map[Int,String]()
+      }
+
+      getLeaderConsumer.close()
+
+      println("partitions info is:" + partitions)
+      println("children info is:" + children)
+
+      for(i <- 0 until children){
+        val partitionOffset = zkCLient.readData[String](s"${topicDirs.consumerOffsetDir}/${i}")
+        println("保存的偏移位置是："+partitionOffset)
+        val tp = TopicAndPartition(topic,i)
+        val requestMin = OffsetRequest(Map(tp -> PartitionOffsetRequestInfo(OffsetRequest.EarliestTime,1)))
+        val consumerMin = new SimpleConsumer(partitions(i),9092,10000,10000,"getMinOffset")
+        val curOffset = consumerMin.getOffsetsBefore(requestMin).partitionErrorAndOffsets(tp).offsets
+        consumerMin.close()
+        var nextOffset = partitionOffset.toLong
+
+        if(curOffset.length > 0 && nextOffset < curOffset.head){
+          nextOffset = curOffset.head
+        }
+        println("修正后的偏移位置是："+nextOffset)
+        fromOffsets += (tp -> nextOffset)
+
+
+      }
+      val messageHandler = (mmd:MessageAndMetadata[String,String]) => (mmd.topic,mmd.message())
+
 //      adRealtimeLogDStream = KafkaUtils.createDirectStream[String,String,StringDecoder,StringDecoder](ssc,kafkaParams,Set(topic))
-//    }
+      adRealtimeLogDStream = KafkaUtils.createDirectStream[String,String,StringDecoder,StringDecoder,(String,String)](ssc,kafkaParams,fromOffsets,messageHandler)
+    }else{
+      println("直接创建")
+      adRealtimeLogDStream = KafkaUtils.createDirectStream[String,String,StringDecoder,StringDecoder](ssc,kafkaParams,Set(topic))
+    }
+
+
+    //获取消费的offset，必须在createDirectStream之后直接拿
+    var offsetRanges = Array[OffsetRange]()
+    val abc = adRealtimeLogDStream.transform{rdd =>
+      offsetRanges = rdd.asInstanceOf[HasOffsetRanges].offsetRanges
+      rdd
+    }
 
 
 
-//    var offsetRanges = Array[OffsetRange]()
-//
-//    val abc = adRealtimeLogDStream.transform{rdd =>
-//      offsetRanges = rdd.asInstanceOf[HasOffsetRanges].offsetRanges
-//      rdd
-//    }
-//
-//    abc.foreachRDD{rdd =>
-//      for(offset <- offsetRanges){
-//        println(offset)
-//      }
-//
-//      rdd.foreachPartition{items =>
-////        处理了业务
-//        for(item <- items){
-//
-//        }
-//
-//      }
-//
-////      创建一个zookeeper的目录
-//      val updateTopicDir = new ZKGroupTopicDirs("advertise-analyse",topic)
-////      创建 一个zookeeper的客户端
-//      val updateZkClient = new ZkClient(zookeeper)
-//
-////      保存了所有partition的信息
-//      for(offset <- offsetRanges){
-//        val zkPath = s"${updateTopicDir.consumerOffsetDir}/${offset.partition}"
-//        ZkUtils.updatePersistentPath(updateZkClient,zkPath,offset.fromOffset.toString)
-//      }
-//      updateZkClient.close()
-//    }
+    abc.foreachRDD{rdd =>
+      for(offset <- offsetRanges){
+        println(offset)
+      }
+
+      rdd.foreachPartition{items =>
+//        处理业务
+        for(item <- items){
+          println(item+"maoyujiao")
+        }
+
+      }
+
+//      创建一个zookeeper的目录
+      val updateTopicDir = new ZKGroupTopicDirs("advertise-analyse",topic)
+//      创建 一个zookeeper的客户端
+      val updateZkClient = new ZkClient(zookeeper)
+
+//      保存了所有partition的信息
+      for(offset <- offsetRanges){
+        val zkPath = s"${updateTopicDir.consumerOffsetDir}/${offset.partition}"
+        ZkUtils.updatePersistentPath(updateZkClient,zkPath,offset.fromOffset.toString)
+      }
+      updateZkClient.close()
+    }
 
 /*    adRealtimeLogDStream.foreachRDD{rdd =>
       rdd.foreachPartition{items =>
